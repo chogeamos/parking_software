@@ -1,30 +1,14 @@
-// db.js - opens sqlite, runs migrations when invoked with migrate
 const Database = require('better-sqlite3');
 const fs = require('fs');
 const path = require('path');
-
 const DB_FILE = process.env.DATABASE_FILE || './data/kparking.db';
-
-// Ensure directory exists
-if (!fs.existsSync(path.dirname(DB_FILE))) {
-  fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
-}
-
-// Open SQLite database
+if (!fs.existsSync(path.dirname(DB_FILE))) fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
 const db = new Database(DB_FILE);
-
-// Run migrations manually if needed
 function migrate() {
   const initSqlPath = path.join(__dirname, '..', 'migrations', 'init.sql');
   const sql = fs.readFileSync(initSqlPath, 'utf8');
   db.exec(sql);
   console.log('Migration executed.');
 }
-
-// If called directly: node src/db.js migrate
-if (require.main === module) {
-  migrate();
-  process.exit(0);
-}
-
+if (require.main === module) { migrate(); process.exit(0); }
 module.exports = db;
