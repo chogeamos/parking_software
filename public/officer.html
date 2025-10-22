@@ -1,0 +1,14 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>KISII Parking - Officer UI</title></head>
+<body><h1>Officer Panel</h1><div><label>Plate: <input id="plate"/></label><button onclick="lookup()">Lookup</button></div><div id="result"></div>
+<script>
+async function lookup(){
+ const plate=document.getElementById('plate').value.trim().toUpperCase();
+ if(!plate)return alert('Enter plate');
+ const res=await fetch(`/officer/lookup/${encodeURIComponent(plate)}`);
+ const area=document.getElementById('result');
+ if(res.status===404){area.innerHTML='<p>No record found.</p>';return;}
+ const rec=await res.json();
+ area.innerHTML=`<pre>${JSON.stringify(rec,null,2)}</pre>`;
+}
+</script></body></html>

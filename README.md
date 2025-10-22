@@ -1,0 +1,1 @@
+K-PARKING Node.js project ready for deployment. Run npm install && npm run migrate && npm start.
