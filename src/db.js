@@ -1,30 +1,41 @@
-// db.js - opens sqlite, runs migrations when invoked with migrate
-const Database = require('better-sqlite3');
+// db.js - adaptive SQLite for local + Vercel environments
 const fs = require('fs');
 const path = require('path');
+const Database = require('better-sqlite3');
 
-const DB_FILE = process.env.DATABASE_FILE || './data/kparking.db';
+// Detect environment
+const isVercel = !!process.env.VERCEL;
 
-// Ensure directory exists
-if (!fs.existsSync(path.dirname(DB_FILE))) {
+// Choose database file path
+const DB_FILE = isVercel
+  ? ':memory:' // in-memory DB for Vercel
+  : (process.env.DATABASE_FILE || './data/kparking.db');
+
+// Ensure local directory exists
+if (!isVercel && !fs.existsSync(path.dirname(DB_FILE))) {
   fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
 }
 
-// Open SQLite database
 const db = new Database(DB_FILE);
 
-// Run migrations manually if needed
+// Migration
 function migrate() {
   const initSqlPath = path.join(__dirname, '..', 'migrations', 'init.sql');
+  if (!fs.existsSync(initSqlPath)) {
+    console.warn('⚠️  migrations/init.sql not found — skipping migration.');
+    return;
+  }
+
   const sql = fs.readFileSync(initSqlPath, 'utf8');
   db.exec(sql);
-  console.log('Migration executed.');
+  console.log('✅ Migration executed on', isVercel ? 'Vercel (in-memory)' : DB_FILE);
 }
 
-// If called directly: node src/db.js migrate
-if (require.main === module) {
+// Run migration automatically (once per function invocation)
+try {
   migrate();
-  process.exit(0);
+} catch (err) {
+  console.error('Migration error:', err.message);
 }
 
 module.exports = db;
